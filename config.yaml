@@ -1,0 +1,9 @@
+name: "Gorgias MCP Server"
+description: "MCP server for Gorgias MCP Server"
+icon: "assets/icon.png"
+
+auth:
+  type: none
+tools:
+  - name: "example_tool"
+    description: "Example tool demonstrating credential usage"
