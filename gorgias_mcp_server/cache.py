@@ -71,11 +71,14 @@ async def fetch_all_pages(
     *,
     page_limit: int = _PAGE_LIMIT,
     max_items: int | None = None,
+    extra_params: dict[str, Any] | None = None,
 ) -> FetchAllPagesResult:
     """Fetch every page of a cursor-paginated endpoint.
 
     Handles both standard {data, meta} responses and plain-array endpoints
-    (e.g. /api/teams when paged manually).
+    (e.g. /api/teams when paged manually). Pass `extra_params` for static
+    filters like `{"object_type": "Ticket"}` — these are merged into every
+    page request.
     """
     items: list[Any] = []
     cursor: str | None = None
@@ -85,6 +88,8 @@ async def fetch_all_pages(
 
     while True:
         params: dict[str, Any] = {"limit": page_limit}
+        if extra_params:
+            params.update(extra_params)
         if cursor:
             params["cursor"] = cursor
 
@@ -120,9 +125,13 @@ async def fetch_all_pages(
 
 
 async def _fetch_all_pages_flat(
-    client: GorgiasClient, endpoint: str
+    client: GorgiasClient,
+    endpoint: str,
+    extra_params: dict[str, Any] | None = None,
 ) -> list[Any]:
-    return (await fetch_all_pages(client, endpoint)).items
+    return (
+        await fetch_all_pages(client, endpoint, extra_params=extra_params)
+    ).items
 
 
 # Per-client caches keyed by id(client). We use WeakValueDictionary for
@@ -158,7 +167,9 @@ async def get_reference_data(client: GorgiasClient) -> ReferenceData:
             _fetch_all_pages_flat(client, "/api/tags"),
             _fetch_all_pages_flat(client, "/api/teams"),
             _fetch_all_pages_flat(
-                client, "/api/custom-fields?object_type=Ticket"
+                client,
+                "/api/custom-fields",
+                extra_params={"object_type": "Ticket"},
             ),
             _fetch_all_pages_flat(client, "/api/views"),
             _fetch_all_pages_flat(client, "/api/users"),
