@@ -267,11 +267,13 @@ async def _view_search(
     Accepted with no data, no result URL, and no job ID to poll, so the
     original view-search implementation always returned [] for any keyword
     query. This implementation falls back to the standard /api/tickets list
-    endpoint (which IS sync) and filters client-side.
+    endpoint (which IS sync, hard-capped at 100/request) and filters
+    client-side.
 
-    Searches: subject, excerpt, customer.name/email/firstname/lastname, tags.
-    Does NOT search full message bodies — to inspect messages, the caller
-    should run gorgias_smart_get_ticket on the matched tickets.
+    Searches: subject, summary, excerpt (~200 char latest-message snippet),
+    customer.name/email/firstname/lastname, and tag names. Does NOT search
+    full message bodies — to inspect messages, the caller should run
+    gorgias_smart_get_ticket on the matched tickets.
 
     Multi-word queries use AND semantics (all tokens must match somewhere
     in the haystack); single-token queries collapse to substring match.
@@ -284,8 +286,11 @@ async def _view_search(
     if not tokens:
         return []
 
-    # ~14-20 days of typical merchant volume; raise if you need a wider window.
-    fetch_batch = min(max(limit * 10, 100), 200)
+    # /api/tickets has a hard limit of 100 per request — exceeding it 400s
+    # with "limit: Must be at most 100". Always pull the max (100) regardless
+    # of the caller's `limit` so we have the largest candidate pool, then
+    # trim post-filter.
+    fetch_batch = 100
 
     response = await client.get(
         "/api/tickets",
@@ -307,6 +312,7 @@ async def _view_search(
         customer = t.get("customer") or {}
         haystack_parts = [
             t.get("subject") or "",
+            t.get("summary") or "",
             t.get("excerpt") or "",
             customer.get("name") or "",
             customer.get("email") or "",
