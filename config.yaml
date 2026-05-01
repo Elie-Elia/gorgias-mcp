@@ -137,3 +137,137 @@ tools:
     description: "List tickets in a saved view."
   - name: "gorgias_search_view_items"
     description: "Search tickets with an inline view configuration."
+
+  # --- Account ---
+  - name: "gorgias_retrieve_account"
+    description: "Retrieve the current account information."
+  - name: "gorgias_list_account_settings"
+    description: "List account-wide settings (e.g. business hours)."
+  - name: "gorgias_create_account_setting"
+    description: "Create a new account-level setting."
+  - name: "gorgias_update_account_setting"
+    description: "Update an existing account setting by ID."
+
+  # --- Custom Fields ---
+  - name: "gorgias_list_custom_fields"
+    description: "List custom field definitions for Ticket or Customer entities."
+  - name: "gorgias_get_custom_field"
+    description: "Retrieve a single custom field definition."
+  - name: "gorgias_create_custom_field"
+    description: "Create a new custom field definition."
+  - name: "gorgias_update_custom_field"
+    description: "Update a custom field definition."
+  - name: "gorgias_bulk_update_custom_fields"
+    description: "Bulk update multiple custom field definitions in one request."
+
+  # --- Events ---
+  - name: "gorgias_list_events"
+    description: "Read-only system event log with filters and pagination."
+  - name: "gorgias_get_event"
+    description: "Retrieve a single system event by ID."
+
+  # --- Files ---
+  - name: "gorgias_upload_file"
+    description: "NOT FUNCTIONAL: upload requires multipart; JSON-only client cannot satisfy."
+  - name: "gorgias_download_file"
+    description: "Download a private Gorgias-hosted file by URL-derived path segments."
+
+  # --- Integrations ---
+  - name: "gorgias_list_integrations"
+    description: "List integrations, optionally filtered by type."
+  - name: "gorgias_get_integration"
+    description: "Retrieve a single integration with its HTTP config."
+  - name: "gorgias_create_integration"
+    description: "Create a new HTTP integration."
+  - name: "gorgias_update_integration"
+    description: "Update an existing integration."
+  - name: "gorgias_delete_integration"
+    description: "Delete an integration (deactivates dependent views)."
+
+  # --- Jobs ---
+  - name: "gorgias_list_jobs"
+    description: "List asynchronous background jobs with filters."
+  - name: "gorgias_get_job"
+    description: "Retrieve a single background job."
+  - name: "gorgias_create_job"
+    description: "Queue an asynchronous job (bulk macro apply, ticket export, etc.)."
+  - name: "gorgias_update_job"
+    description: "Update a job's metadata, params, schedule, or status."
+  - name: "gorgias_cancel_job"
+    description: "Cancel an in-flight or scheduled job."
+
+  # --- Reporting ---
+  - name: "gorgias_retrieve_reporting_statistic"
+    description: "Low-level reporting endpoint; prefer gorgias_smart_stats for LLM-friendly defaults."
+
+  # --- Rules ---
+  - name: "gorgias_list_rules"
+    description: "List automation rules."
+  - name: "gorgias_get_rule"
+    description: "Retrieve a single automation rule."
+  - name: "gorgias_create_rule"
+    description: "Create a new automation rule with JS logic and triggers."
+  - name: "gorgias_update_rule"
+    description: "Partial update of an automation rule."
+  - name: "gorgias_delete_rule"
+    description: "Permanently delete an automation rule."
+  - name: "gorgias_update_rules_priorities"
+    description: "Batch update execution priorities for multiple rules."
+
+  # --- Satisfaction Surveys ---
+  - name: "gorgias_list_satisfaction_surveys"
+    description: "List CSAT surveys."
+  - name: "gorgias_get_satisfaction_survey"
+    description: "Retrieve a single CSAT survey."
+  - name: "gorgias_create_satisfaction_survey"
+    description: "Create a CSAT survey for a ticket."
+  - name: "gorgias_update_satisfaction_survey"
+    description: "Full-replacement update of a CSAT survey."
+
+  # --- Teams ---
+  - name: "gorgias_list_teams"
+    description: "List teams."
+  - name: "gorgias_get_team"
+    description: "Retrieve a single team and its members."
+  - name: "gorgias_create_team"
+    description: "Create a team for auto-assignment."
+  - name: "gorgias_update_team"
+    description: "Update a team (members replaces existing membership)."
+  - name: "gorgias_delete_team"
+    description: "Permanently delete a team."
+
+  # --- Voice Calls ---
+  - name: "gorgias_list_voice_calls"
+    description: "List voice calls (Gorgias Voice integration)."
+  - name: "gorgias_get_voice_call"
+    description: "Retrieve a single voice call."
+  - name: "gorgias_list_voice_call_events"
+    description: "List voice call lifecycle events."
+  - name: "gorgias_get_voice_call_event"
+    description: "Retrieve a single voice call event."
+  - name: "gorgias_list_voice_call_recordings"
+    description: "List voice call recordings and voicemails."
+  - name: "gorgias_get_voice_call_recording"
+    description: "Retrieve a single voice call recording or voicemail."
+  - name: "gorgias_delete_voice_call_recording"
+    description: "Permanently delete a voice call recording or voicemail."
+
+  # --- Widgets ---
+  - name: "gorgias_list_widgets"
+    description: "List sidebar widgets."
+  - name: "gorgias_get_widget"
+    description: "Retrieve a single sidebar widget."
+  - name: "gorgias_create_widget"
+    description: "Create a new sidebar widget."
+  - name: "gorgias_update_widget"
+    description: "Update a widget (template fully replaces)."
+  - name: "gorgias_delete_widget"
+    description: "Permanently delete a widget."
+
+  # --- Smart layer (intelligence helpers) ---
+  - name: "gorgias_smart_search"
+    description: "Intelligent ticket search with auto-detection of emails, IDs, order numbers, customer names, views, and topic keywords."
+  - name: "gorgias_smart_get_ticket"
+    description: "Retrieve a ticket with its full conversation thread, projected for LLM consumption and chronologically sorted."
+  - name: "gorgias_smart_stats"
+    description: "Reporting analytics with auto-defaults, validation, agent-name resolution, and pagination."

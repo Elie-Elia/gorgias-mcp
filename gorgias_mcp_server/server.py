@@ -19,14 +19,33 @@ from starlette.responses import JSONResponse
 
 from gorgias_mcp_server.access_control import ToolRegistrar, parse_access_level
 from gorgias_mcp_server.client import GorgiasClient
+from gorgias_mcp_server.tools.account import register_account_tools
+from gorgias_mcp_server.tools.custom_fields import register_custom_field_tools
 from gorgias_mcp_server.tools.customers import register_customer_tools
+from gorgias_mcp_server.tools.events import register_event_tools
+from gorgias_mcp_server.tools.files import register_file_tools
+from gorgias_mcp_server.tools.integrations import register_integration_tools
+from gorgias_mcp_server.tools.jobs import register_job_tools
 from gorgias_mcp_server.tools.macros import register_macro_tools
+from gorgias_mcp_server.tools.reporting import register_reporting_tools
+from gorgias_mcp_server.tools.rules import register_rule_tools
+from gorgias_mcp_server.tools.satisfaction_surveys import (
+    register_satisfaction_survey_tools,
+)
 from gorgias_mcp_server.tools.search import register_search_tools
+from gorgias_mcp_server.tools.smart_search import register_smart_search_tools
+from gorgias_mcp_server.tools.smart_stats import register_smart_stats_tools
+from gorgias_mcp_server.tools.smart_ticket_detail import (
+    register_smart_ticket_detail_tools,
+)
 from gorgias_mcp_server.tools.tags import register_tag_tools
+from gorgias_mcp_server.tools.teams import register_team_tools
 from gorgias_mcp_server.tools.ticket_messages import register_ticket_message_tools
 from gorgias_mcp_server.tools.tickets import register_ticket_tools
 from gorgias_mcp_server.tools.users import register_user_tools
 from gorgias_mcp_server.tools.views import register_view_tools
+from gorgias_mcp_server.tools.voice_calls import register_voice_call_tools
+from gorgias_mcp_server.tools.widgets import register_widget_tools
 from gorgias_mcp_server.utils.auth import get_credentials
 
 
@@ -79,6 +98,7 @@ def _bootstrap() -> ToolRegistrar:
     client = GorgiasClient(domain=domain, email=email, api_key=api_key)
     registrar = ToolRegistrar(mcp, level)
 
+    # Core ticket / customer / messaging surface
     register_ticket_tools(registrar, client)
     register_ticket_message_tools(registrar, client)
     register_customer_tools(registrar, client)
@@ -87,6 +107,25 @@ def _bootstrap() -> ToolRegistrar:
     register_tag_tools(registrar, client)
     register_user_tools(registrar, client)
     register_view_tools(registrar, client)
+
+    # Admin / operational
+    register_account_tools(registrar, client)
+    register_custom_field_tools(registrar, client)
+    register_event_tools(registrar, client)
+    register_file_tools(registrar, client)
+    register_integration_tools(registrar, client)
+    register_job_tools(registrar, client)
+    register_reporting_tools(registrar, client)
+    register_rule_tools(registrar, client)
+    register_satisfaction_survey_tools(registrar, client)
+    register_team_tools(registrar, client)
+    register_voice_call_tools(registrar, client)
+    register_widget_tools(registrar, client)
+
+    # Smart layer (intelligence helpers built on the basic tools)
+    register_smart_search_tools(registrar, client)
+    register_smart_ticket_detail_tools(registrar, client)
+    register_smart_stats_tools(registrar, client)
 
     logger.info(
         "Gorgias MCP server ready (access_level=%s, registered=%d, skipped=%d)",
