@@ -261,19 +261,65 @@ def _build_response(
 async def _view_search(
     client: GorgiasClient, search_term: str, limit: int
 ) -> list[dict[str, Any]]:
-    """Server-side full-text search using the Gorgias view search endpoint."""
-    response = await client.put(
-        "/api/views/0/items",
-        {"view": {"search": search_term, "type": "ticket-list"}},
-        {"limit": limit},
+    """Synchronous keyword-style search over recent tickets.
+
+    Gorgias's PUT /api/views/0/items endpoint is async — it returns 202
+    Accepted with no data, no result URL, and no job ID to poll, so the
+    original view-search implementation always returned [] for any keyword
+    query. This implementation falls back to the standard /api/tickets list
+    endpoint (which IS sync) and filters client-side.
+
+    Searches: subject, excerpt, customer.name/email/firstname/lastname, tags.
+    Does NOT search full message bodies — to inspect messages, the caller
+    should run gorgias_smart_get_ticket on the matched tickets.
+
+    Multi-word queries use AND semantics (all tokens must match somewhere
+    in the haystack); single-token queries collapse to substring match.
+    """
+    term = search_term.lower().strip()
+    if not term:
+        return []
+
+    tokens = [tok for tok in term.split() if tok]
+    if not tokens:
+        return []
+
+    # ~14-20 days of typical merchant volume; raise if you need a wider window.
+    fetch_batch = min(max(limit * 10, 100), 200)
+
+    response = await client.get(
+        "/api/tickets",
+        {
+            "limit": fetch_batch,
+            "order_by": "updated_datetime:desc",
+            "trashed": False,
+        },
     )
-    if isinstance(response, list):
-        return response
-    if isinstance(response, dict):
-        data = response.get("data")
-        if isinstance(data, list):
-            return data
-    return []
+    tickets = response.get("data", []) if isinstance(response, dict) else []
+
+    filtered: list[dict[str, Any]] = []
+    for t in tickets:
+        tag_names: list[str] = []
+        for tag in t.get("tags") or []:
+            if isinstance(tag, dict) and tag.get("name"):
+                tag_names.append(str(tag["name"]))
+
+        customer = t.get("customer") or {}
+        haystack_parts = [
+            t.get("subject") or "",
+            t.get("excerpt") or "",
+            customer.get("name") or "",
+            customer.get("email") or "",
+            customer.get("firstname") or "",
+            customer.get("lastname") or "",
+            *tag_names,
+        ]
+        haystack = " ".join(haystack_parts).lower()
+
+        if all(tok in haystack for tok in tokens):
+            filtered.append(t)
+
+    return filtered[:limit]
 
 
 async def _search_by_email(
