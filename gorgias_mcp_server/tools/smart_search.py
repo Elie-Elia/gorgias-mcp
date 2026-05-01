@@ -18,7 +18,7 @@ from pydantic import Field
 from gorgias_mcp_server.access_control import ToolRegistrar
 from gorgias_mcp_server.cache import get_reference_data
 from gorgias_mcp_server.client import GorgiasClient
-from gorgias_mcp_server.errors import sanitise_error_for_llm
+from gorgias_mcp_server.errors import GorgiasApiError, sanitise_error_for_llm
 from gorgias_mcp_server.fuzzy_match import fuzzy_match_name
 from gorgias_mcp_server.projection import project_ticket
 
@@ -653,7 +653,18 @@ def register_smart_search_tools(
                     or ticket_id_match.group(2)
                     or ticket_id_match.group(3)
                 )
-                return await _get_ticket_by_id(client, int(tid_str))
+                # Pure-numeric queries can be either ticket IDs or order
+                # numbers (e.g. Casa Di Lumo's #14134, #14699). Try ticket
+                # ID; on 404, fall back to keyword search so order numbers
+                # also work.
+                try:
+                    return await _get_ticket_by_id(client, int(tid_str))
+                except GorgiasApiError as err:
+                    if err.status_code == 404 or "does not exist" in str(err):
+                        return await _search_by_keyword(
+                            client, q, args, result_limit
+                        )
+                    raise
 
             # Strategy 3: order/reference number
             order_ref = _extract_order_ref(q)
@@ -671,16 +682,19 @@ def register_smart_search_tools(
             if view_result is not None:
                 return view_result
 
-            # Strategy 6: customer name fuzzy match
+            # Strategy 6: topic keyword → keyword search.
+            # Promoted ABOVE customer-name fuzzy match — words like
+            # "tracking", "shipping", "refund" were being misclassified as
+            # customer names because fuzzy_match_name's threshold is loose.
+            if _query_matches_topic_keyword(q):
+                return await _search_by_keyword(client, q, args, result_limit)
+
+            # Strategy 7: customer name fuzzy match
             customer_result = await _search_by_customer_name(
                 client, q, args, result_limit
             )
             if customer_result is not None:
                 return customer_result
-
-            # Strategy 7: topic keyword → keyword search
-            if _query_matches_topic_keyword(q):
-                return await _search_by_keyword(client, q, args, result_limit)
 
             # Strategy 8: keyword fallback
             return await _search_by_keyword(client, q, args, result_limit)
